@@ -5,3 +5,5 @@ PromProg is a versatile PROM Programmer for three basic PROM chips - 74188, 74S2
 Device is based on ATmega16 microcontroller, data for programming can be downloaded from master computer from your preferred terminal software in Intel HEX format or entered manually using keyboard. You can also read the content from chip and send it to the computer.
 
 For powering use 15V/1A wall adapter or bench power supply.
+
+More info at https://www.8bit-replicas.tech/index.php/2021/08/26/programator-pamati-prom/

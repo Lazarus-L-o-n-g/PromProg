@@ -6,4 +6,4 @@ Device is based on ATmega16 microcontroller, data for programming can be downloa
 
 For powering use 15V/1A wall adapter or bench power supply.
 
-More info at https://www.8bit-replicas.tech/index.php/2021/08/26/programator-pamati-prom/
+More info at https://www.8bit-replicas.com/index.php/2021/08/26/programator-pamati-prom/

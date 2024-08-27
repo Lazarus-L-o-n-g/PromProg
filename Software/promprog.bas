@@ -75,7 +75,7 @@ Dim Curpos As Byte , Curs As Byte
 Dim Bitpos As Byte
 Dim Goout As Byte
 Dim Goroot As Byte
-Dim Errcount As Byte
+Dim Errcount As Integer
 Dim Okprog As Byte
 Dim Intelhex As String * 41
 
@@ -137,8 +137,13 @@ Cursor Off Noblink
 Locate 1 , 1
 Lcd "PROM Programmer"
 Locate 2 , 7
-Lcd "v1.1"
-Wait 1
+Lcd "v1.2"
+Wait 2
+Locate 1 , 1
+Lcd "www.github.com  "
+Locate 2 , 1
+Lcd "/Lazarus-L-o-n-g"
+Wait 3
 Cls
 
 Do
@@ -147,9 +152,9 @@ Do
    '--------------------------------
    Goroot = 0
    Locate 1 , 1
-   Lcd "Select   1=74188"
+   Lcd "Select  74(S)___"
    Locate 2 , 1
-   Lcd "2=74287  3=74571"
+   Lcd "188   287   571 "
    Do
       If Sw1 = 0 Then
          Waitms 50
@@ -160,18 +165,18 @@ Do
          Selstr = "74188 Selected"
          Exit Do
       End If
-      If Sw2 = 0 Then
+      If Sw3 = 0 Then
          Waitms 50
-         Bitwait Sw2 , Set
+         Bitwait Sw3 , Set
          Seltype = 2
          Seladdr = Prom74287
          Selwide = Prom74287b
          Selstr = "74S287 Selected"
          Exit Do
       End If
-      If Sw3 = 0 Then
+      If Sw5 = 0 Then
          Waitms 50
-         Bitwait Sw3 , Set
+         Bitwait Sw5 , Set
          Seltype = 3
          Seladdr = Prom74571
          Selwide = Prom74571b
@@ -190,7 +195,7 @@ Do
       Locate 1 , 1
       Lcd Selstr
       Locate 2 , 1
-      Lcd "EDT PC RD PRG EX"
+      Lcd "ED PC RD VF PG x"
       Do
       '--------------------------------
       ' Edit memory content
@@ -203,7 +208,7 @@ Do
          Curaddr = 0
          Call Showrecord(1)
          Locate 2 , 1
-         Lcd Chr(2) ; "  " ; Chr(3) ; "  " ; Chr(0) ; "  " ; Chr(1) ; "  " ; Chr(4) ; " EX"
+         Lcd Chr(2) ; "  " ; Chr(3) ; "  " ; Chr(0) ; "  " ; Chr(1) ; "  " ; Chr(4) ; "  x"
          Locate 1 , 5
          Goout = 0
          Curpos = 0                                         ' cursor position for address browsing
@@ -285,7 +290,7 @@ Do
          Do
             Goout = 0
             Locate 2 , 1
-            Lcd "Load Save       "
+            Lcd "LD SV           "
             If Sw1 = 0 Then                                 ' load data from PC
                Waitms 50
                Bitwait Sw1 , Set
@@ -302,7 +307,7 @@ Do
                Call Exporthex
                Wait 1
                Locate 2 , 1
-               Lcd "HEX file sent EX"
+               Lcd "HEX file sent  x"
                Bitwait Sw6 , Reset
                Waitms 50
                Bitwait Sw6 , Set
@@ -341,7 +346,59 @@ Do
          Locate 1 , 1
          Lcd Selstr
          Locate 2 , 1
-         Lcd "Reading done  EX"
+         Lcd "Reading done   x"
+         If Sw6 = 0 Then
+            Waitms 50
+            Bitwait Sw6 , Set
+         End If
+      End If
+      '--------------------------------
+      ' Verify memory content
+      ' against chip in socket
+      '--------------------------------
+      If Sw4 = 0 Then
+         Goout = 0
+         Goroot = 0
+         Errcount = 0
+         Waitms 50
+         Bitwait Sw4 , Set
+         Cls
+         For Curaddr = 0 To Seladdr
+            Str4 = Str(Curaddr)
+            Str4 = Format(str4 , "0000")
+            Locate 2 , 1
+            Lcd Str4 ; "="
+            Call Setaddr
+            Reset Cs                                                 ' Enable reading from chip
+            Reset Datload
+            Set Datload                                              ' lock data into shift register
+            For I = Selwide-1 To 0 Step -1                                   ' shift one bit
+               Str8 = Str(Dat)
+               Lcd Str8
+               If Str(Content(curaddr).i) <> Str8 Then
+                  Incr Errcount
+               End If
+               Set Datclk
+               Reset Datclk
+            Next I
+            Set Cs
+            Call Showrecord(1)
+            If Seltype = 1 Then
+               Waitms 100
+            End If
+         Next Curaddr
+         Wait 1
+         Cls
+         Locate 1 , 1
+         Lcd Selstr
+         Locate 2 , 1
+         If Errcount = 0 Then
+            Lcd "* Verify OK *"
+         Else
+            Lcd "FAIL, " ; Errcount ; " ERR   "
+         End If
+         Locate 2 , 16
+         Lcd "x"
          If Sw6 = 0 Then
             Waitms 50
             Bitwait Sw6 , Set
@@ -350,17 +407,19 @@ Do
       '--------------------------------
       ' Start programming
       '--------------------------------
-      If Sw4 = 0 Then
+      If Sw5 = 0 Then
          Goout = 0
          Goroot = 0
          Waitms 50
-         Bitwait Sw4 , Set
+         Bitwait Sw5 , Set
          Locate 2 , 1
-         Lcd "PRG chip? EN/EX "
+         Lcd "PRG chip? YES/NO"
          Do
             If Sw5 = 0 Then                                 ' programing confirmed
                Waitms 50
                Bitwait Sw5 , Set
+               Locate 2 , 1
+               Lcd "                "
                '--------------------------------
                ' Starting programming procedure
                '--------------------------------
@@ -369,56 +428,66 @@ Do
                   Call Showrecord(2)                        ' show current record
                   Call Setaddr                              ' set up address on chip
                   For I = 0 To 7
-                  If Content(curaddr).i = 1 Then            ' bit needs to be programmed
-                     Call Setbit(i)                         ' select bit for programing
-                     Reset Cs                               ' select chip
-                     Waitus 10                              ' wait 10 microseconds
-                     Set Burn                               ' enable programming voltage
-                     Reset Ben                              ' ground programmed bit
-                     Waitus 200                             ' wait 200us - stabilizing
-                     Set Cs                                 ' deselect chip
-                     Waitms 1                               ' wait default programing time - 1ms
-                     Reset Cs                               ' select chip again
-                     Waitus 200                             ' wait 200us - stabilizing
-                     Set Ben                                ' deselect programmed bit
-                     Reset Burn                             ' disable high voltage
-                     Waitus 10                              ' wait another 10us
-                     Waitms 4                               ' recovery time 4x programing time
-                     Okprog = Checkbit(i)
-                     If Okprog = 0 Then                     ' bit was not programmed
-                        Reset Cs                            ' select chip
-                        Waitus 10                           ' wait 10 microseconds
-                        Set Burn                            ' enable programming voltage
-                        Reset Ben                           ' ground programmed bit
-                        Waitus 200                          ' wait 200us - stabilizing
-                        Set Cs                              ' deselect chip
-                        Waitms 4                            ' wait default extended time - 4ms
-                        Reset Cs                            ' select chip again
-                        Waitus 200                          ' wait 200us - stabilizing
-                        Set Ben                             ' deselect programmed bit
-                        Reset Burn                          ' disable high voltage
-                        Waitus 10                           ' wait another 10us
-                        Waitms 16                           ' recovery time 4x programing time
+                  If Content(curaddr).i = 1 Then
+                     Okprog = Checkbit(i)                      ' bit needs to be programmed
+                     If Okprog = 0 Then                        ' skip programmed bits
+                        Call Setbit(i)                         ' select bit for programing
+                        Reset Cs                               ' select chip
+                        Waitus 10                              ' wait 10 microseconds
+                        Set Burn                               ' enable programming voltage
+                        Reset Ben                              ' ground programmed bit
+                        Waitus 200                             ' wait 200us - stabilizing
+                        Set Cs                                 ' deselect chip
+                        Waitms 1                               ' wait default programing time - 1ms
+                        Reset Cs                               ' select chip again
+                        Waitus 200                             ' wait 200us - stabilizing
+                        Set Ben                                ' deselect programmed bit
+                        Reset Burn                             ' disable high voltage
+                        Waitus 10                              ' wait another 10us
+                        Waitms 4                               ' recovery time 4x programing time
                         Okprog = Checkbit(i)
-                        If Okprog = 0 Then                  ' bit was not programmed again, last try with maximum pulse width
-                           Reset Cs                         ' select chip
-                           Waitus 10                        ' wait 10 microseconds
-                           Set Burn                         ' enable programming voltage
-                           Reset Ben                        ' ground programmed bit
-                           Waitus 200                       ' wait 200us - stabilizing
-                           Set Cs                           ' deselect chip
-                           Waitms 20                        ' wait default programing time - 1ms
-                           Reset Cs                         ' select chip again
-                           Waitus 200                       ' wait 200us - stabilizing
-                           Set Ben                          ' deselect programmed bit
-                           Reset Burn                       ' disable high voltage
-                           Waitus 10                        ' wait another 10us
-                           Waitms 80                        ' recovery time 4x programing time
+                        If Okprog = 0 Then                     ' bit was not programmed
+                           Reset Cs                            ' select chip
+                           Waitus 10                           ' wait 10 microseconds
+                           Set Burn                            ' enable programming voltage
+                           Reset Ben                           ' ground programmed bit
+                           Waitus 200                          ' wait 200us - stabilizing
+                           Set Cs                              ' deselect chip
+                           Waitms 4                            ' wait default extended time - 4ms
+                           Reset Cs                            ' select chip again
+                           Waitus 200                          ' wait 200us - stabilizing
+                           Set Ben                             ' deselect programmed bit
+                           Reset Burn                          ' disable high voltage
+                           Waitus 10                           ' wait another 10us
+                           Waitms 16                           ' recovery time 4x programing time
                            Okprog = Checkbit(i)
-                           If Okprog = 0 Then               ' programming of bit failed, increasing error counter and continuing
-                              Incr Errcount
+                           If Okprog = 0 Then                  ' bit was not programmed again, last try with maximum pulse width
+                              Reset Cs                         ' select chip
+                              Waitus 10                        ' wait 10 microseconds
+                              Set Burn                         ' enable programming voltage
+                              Reset Ben                        ' ground programmed bit
+                              Waitus 200                       ' wait 200us - stabilizing
+                              Set Cs                           ' deselect chip
+                              Waitms 20                        ' wait default programing time - 1ms
+                              Reset Cs                         ' select chip again
+                              Waitus 200                       ' wait 200us - stabilizing
+                              Set Ben                          ' deselect programmed bit
+                              Reset Burn                       ' disable high voltage
+                              Waitus 10                        ' wait another 10us
+                              Waitms 80                        ' recovery time 4x programing time
+                              Okprog = Checkbit(i)
+                              If Okprog = 0 Then               ' programming of bit failed, increasing error counter and continuing
+                                 Incr Errcount
+                              End If
                            End If
                         End If
+                     End If
+                  End If
+                  If Content(curaddr).i = 0 Then
+                     Waitms 100
+                     Okprog = Checkbit(i)                   ' also check the non-programmed zero bits to check all the memory cells to be sure all chip is ok
+                     If Okprog = 1 Then                    ' verify of other bit failed, increasing error counter and continuing
+                        Incr Errcount
                      End If
                   End If
                   Next I
@@ -428,9 +497,15 @@ Do
                '--------------------------------
                Wait 1
                Locate 2 , 1
-               Lcd "Done, " ; Errcount ; " ERR   "
+               If Errcount = 0 Then
+               Lcd "** SUCCESS **"
+               ElseIf Errcount < 100 Then
+                  Lcd "Fail, " ; Errcount ; " ERR   "
+               Else
+               Lcd "Fail>100 ERRs!"
+               End If
                Locate 2 , 15
-               Lcd "EX"
+               Lcd " x"
                Bitwait Sw6 , Reset
                Waitms 50
                Bitwait Sw6 , Set
@@ -449,6 +524,16 @@ Do
          Loop
       End If
       If Goroot = 1 Then
+         Exit Do
+      End If
+      '--------------------------------
+      ' Check routine
+      '--------------------------------
+      If Sw5 = 0 Then
+         Waitms 50
+         Bitwait Sw5 , Set
+         Cls
+         Goroot = 1
          Exit Do
       End If
       '--------------------------------
@@ -496,6 +581,8 @@ Sub Showrecord(torow As Byte)
    Str8 = Bin(curdata)
    Str8 = Right(str8 , Selwide)
    Lcd Str8
+   Locate Torow, 15
+   Lcd Hex(curdata)
 End Sub
 
 '--------------------------------
@@ -540,7 +627,6 @@ Sub Readchip
    Next I
    Set Cs                                                   ' disable chip
 End Sub
-
 
 '--------------------------------
 ' Subroutine for setting one
@@ -672,7 +758,7 @@ Sub Readhex
          Chksum = Chksum + 1
          If Pom <> Chksum Then
             Locate 2 , 1
-            Lcd "Checksum err  EX"
+            Lcd "Checksum err   x"
             Bitwait Sw6 , Reset
             Waitms 50
             Bitwait Sw6 , Set
@@ -680,7 +766,7 @@ Sub Readhex
          End If
       Else
          Locate 2 , 1
-         Lcd "File loaded   EX"
+         Lcd "File loaded    x"
             Bitwait Sw6 , Reset
             Waitms 50
             Bitwait Sw6 , Set

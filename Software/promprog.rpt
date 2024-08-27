@@ -1,16 +1,16 @@
 Report       : promprog
-Date         : 09-30-2018
-Time         : 23:59:40
+Date         : 08-27-2024
+Time         : 10:29:30
 
-Compiler     : BASCOM-AVR LIBRARY V 2.0.8.1
+Compiler     : BASCOM-AVR LIBRARY V 2.0.8.5
 Processor    : M16
 SRAM         : 400 hex
 EEPROM       : 200 hex
 ROMSIZE      : 4000 hex
 
-ROMIMAGE     : 18FA hex  -> Will fit into ROM
-ROMIMAGE     :  6394 dec
-FLASH USED   :  39  %
+ROMIMAGE     : 1CFE hex  -> Will fit into ROM
+ROMIMAGE     :  7422 dec
+FLASH USED   :  45  %
 BAUD         : 9600 Baud
 XTAL         : 8000000 Hz
 BAUD error   : 0.16%
@@ -21,7 +21,7 @@ S-Stacksize  : 20 hex
 S-Stackstart : 438 hex
 Framesize    : 20 hex
 Framestart   : 3F8 hex
-Space left   :  317  dec
+Space left   :  316  dec
 
 LCD DB7      : PORTB.1
 LCD DB6      : PORTB.2
@@ -108,10 +108,10 @@ CURS                             Byte              0288          648
 BITPOS                           Byte              0289          649 
 GOOUT                            Byte              028A          650 
 GOROOT                           Byte              028B          651 
-ERRCOUNT                         Byte              028C          652 
-OKPROG                           Byte              028D          653 
-INTELHEX                         String * 41       028E          654 
-ADDR                             Word              02B8          696 
+ERRCOUNT                         Integer           028C          652 
+OKPROG                           Byte              028E          654 
+INTELHEX                         String * 41       028F          655 
+ADDR                             Word              02B9          697 
 
 --------------------------------------------------------------------------------
 Constant                         Value
@@ -495,7 +495,7 @@ _SIM                             0
 _HUGE                            0
 _BASE                            0
 _XTAL                            8000000
-_BUILD                           20810
+_BUILD                           20850
 _COMPILER                        90
 _HWMUL                           1
 _DOSFILEWRITE                    0
@@ -514,7 +514,9 @@ _FPROTECT                        0
 _HWSTACK_LOW                     &H0437
 _SWSTACK_LOW                     &H0418
 _FRAME_HIGH                      &H0419
+_HAVEMOVW                        1
 _XMEGA                           0
+_XTINY                           0
 _LCDDBRS                         &H12
 _LCDDBRS_PIN                     3
 _LCDDBRSDIR                      &H11
@@ -533,6 +535,7 @@ _LCDDB6DIR                       &H17
 _LCDDB7                          &H18
 _LCDDB7_PIN                      1
 _LCDDB7DIR                       &H17
+_TEXTLCDKIND                     162
 PROM74188                        31
 PROM74188B                       8
 PROM74287                        255
@@ -563,4 +566,5 @@ Warnings:
 ADCD                             not used
 COMPARE1                         not used
 
-Source string could be too big to fit into target string [STR4>___STRBUF]  in line  492 
+Source string could be too big to fit into target string [STR4>___STRBUF]  in line  367 
+Source string could be too big to fit into target string [STR4>___STRBUF]  in line  577 
